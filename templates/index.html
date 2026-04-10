@@ -1,0 +1,162 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Skripsi BTC - LSTM Analysis</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+</head>
+<body>
+    <div class="d-flex" id="wrapper">
+        <div class="bg-dark text-white border-end" id="sidebar-wrapper" style="width: 250px; min-height: 100vh;">
+            <div class="sidebar-heading p-4 text-center fw-bold border-bottom">Prediksi Analisis BTC</div>
+            <div class="list-group list-group-flush mt-3">
+                <a href="#dashboard" class="list-group-item list-group-item-action bg-dark text-white" id="link-dashboard">🏠 Dashboard</a>
+                <a href="#prediksi" class="list-group-item list-group-item-action bg-dark text-white" id="link-prediksi">🔮 Prediksi</a>
+                <a href="#analisis" class="list-group-item list-group-item-action bg-dark text-white" id="link-analisis">📊 Analisis</a>
+            </div>
+        </div>
+
+        <div id="page-content-wrapper" class="w-100 p-4">
+            
+            <div id="container-dashboard" class="content-container">
+                <h3 class="mb-4">🏠 Dashboard Utama</h3>
+                <div class="row g-3 mb-4">
+                    <div class="col-md-4">
+                        <div class="card p-3 bg-primary text-white border-0 shadow-sm">
+                            <small>Proyeksi 24 Jam</small>
+                            <h2 class="fw-bold">${{ prediksi_val }}</h2>
+                        </div>
+                    </div>
+                    <div class="col-md-4">
+                        <div class="card p-3 bg-danger text-white border-0 shadow-sm">
+                            <small>MAPE (Error)</small>
+                            <h2 class="fw-bold">{{ mape }}%</h2>
+                        </div>
+                    </div>
+                    <div class="col-md-4">
+                        <div class="card p-3 bg-success text-white border-0 shadow-sm">
+                            <small>Status Model</small>
+                            <h2 class="fw-bold">Active</h2>
+                        </div>
+                    </div>
+                </div>
+                <div class="card p-4 shadow-sm border-0">
+                    <h5>Trend Bitcoin Terakhir</h5>
+                    <div class="chart-wrapper">
+                        <canvas id="chartDashboard"></canvas>
+                    </div>
+                </div>
+            </div>
+
+            <div id="container-prediksi" class="content-container d-none">
+                <h3 class="mb-4">🔮 Prediksi Kustom</h3>
+                <div class="card p-4 border-0 shadow-sm">
+                    <form id="form-prediksi">
+                        <div class="row g-3">
+                            <div class="col-md-6">
+                                <label class="form-label">Tentukan Tanggal & Jam Target</label>
+                                <input type="datetime-local" id="input_datetime" class="form-control">
+                            </div>
+                            <div class="col-md-6 d-flex align-items-end">
+                                <button type="button" class="btn btn-primary w-100 fw-bold" onclick="getCustomPrediction()">Proses Prediksi</button>
+                            </div>
+                        </div>
+                    </form>
+                    <div id="hasil-prediksi-kustom" class="mt-4 p-4 bg-light rounded text-center d-none">
+                        <h5 class="text-muted">Hasil Estimasi:</h5>
+                        <h1 class="fw-bold text-primary" id="val_prediksi_kustom">$0.00</h1>
+                    </div>
+                </div>
+            </div>
+
+            <div id="container-analisis" class="content-container d-none">
+                <h3 class="mb-4">📊 Analisis Ketepatan</h3>
+                <div class="card p-4 border-0 shadow-sm mb-4">
+                    <form action="/" method="GET" class="row g-3 align-items-end">
+                        <div class="col-md-4">
+                            <label class="form-label">Tanggal Akhir Analisis</label>
+                            <input type="date" name="target_date" class="form-control" value="{{ target_date }}">
+                        </div>
+                        <div class="col-md-4">
+                            <label class="form-label">Range Hari Kebelakang</label>
+                            <select name="history_range" class="form-select">
+                                <option value="30" {{ 'selected' if history_range == 30 }}>30 Hari</option>
+                                <option value="60" {{ 'selected' if history_range == 60 }}>60 Hari</option>
+                                <option value="90" {{ 'selected' if history_range == 90 }}>90 Hari</option>
+                                <option value="120" {{ 'selected' if history_range == 120 }}>120 Hari</option>
+                            </select>
+                        </div>
+                        <div class="col-md-4">
+                            <button type="submit" class="btn btn-dark w-100">Jalankan Backtesting</button>
+                        </div>
+                    </form>
+                </div>
+                <div class="row g-3 mb-4">
+                    <div class="col-md-4"><div class="card p-3 shadow-sm border-0 text-center">MAE: <b>{{ mae }}</b></div></div>
+                    <div class="col-md-4"><div class="card p-3 shadow-sm border-0 text-center">RMSE: <b>{{ rmse }}</b></div></div>
+                    <div class="col-md-4"><div class="card p-3 shadow-sm border-0 bg-success text-white text-center">Akurasi: <b>{{ acc }}%</b></div></div>
+                </div>
+                <div class="card p-4 border-0 shadow-sm">
+                    <h5>Visualisasi Analisis</h5>
+                    <div class="chart-wrapper">
+                        <canvas id="chartAnalisis"></canvas>
+                    </div>
+                </div>
+            </div>
+
+        </div>
+    </div>
+
+    <script src="{{ url_for('static', filename='js/chart_logic.js') }}"></script>
+    <script>
+        // 1. FUNGSI NAVIGASI (Sangat Penting)
+        function handleNavigation() {
+            // Ambil ID dari URL Hash (contoh: #analisis), default ke 'dashboard'
+            let hash = window.location.hash.substring(1) || 'dashboard';
+            
+            // Sembunyikan semua container dulu
+            document.querySelectorAll('.content-container').forEach(container => {
+                container.classList.add('d-none');
+            });
+            
+            // Tampilkan container yang sesuai dengan Hash
+            const targetContainer = document.getElementById('container-' + hash);
+            if (targetContainer) {
+                targetContainer.classList.remove('d-none');
+            }
+            
+            // Update tampilan menu Aktif di Sidebar
+            document.querySelectorAll('.list-group-item').forEach(link => {
+                link.classList.remove('active');
+            });
+            const activeLink = document.getElementById('link-' + hash);
+            if (activeLink) {
+                activeLink.classList.add('active');
+            }
+        }
+    
+        // 2. JALANKAN NAVIGASI SAAT REFRESH & PINDAH MENU
+        window.addEventListener('load', handleNavigation);
+        window.addEventListener('hashchange', handleNavigation);
+    
+        // 3. RENDER GRAFIK (Panggil fungsi dari chart_logic.js)
+        // Pastikan data dikirim dari Flask (tojson)
+        renderDashboardChart({{ hist_dates | tojson }}, {{ hist_actuals | tojson }});
+        renderAnalisisChart({{ hist_dates | tojson }}, {{ hist_actuals | tojson }}, {{ hist_preds | tojson }});
+    
+        // 4. FUNGSI PREDIKSI KUSTOM
+        function getCustomPrediction() {
+            const resultBox = document.getElementById('hasil-prediksi-kustom');
+            const valBox = document.getElementById('val_prediksi_kustom');
+            resultBox.classList.remove('d-none');
+            valBox.innerText = "...Processing...";
+            
+            setTimeout(() => {
+                valBox.innerText = "${{ prediksi_val }}"; 
+            }, 1000);
+        }
+    </script>
+</body>
+</html>
