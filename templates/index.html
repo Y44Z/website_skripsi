@@ -1,162 +1,351 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="id">
 <head>
     <meta charset="UTF-8">
-    <title>Skripsi BTC - LSTM Analysis</title>
-    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>BTC LSTM — Prediksi Analisis</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link href="https://fonts.googleapis.com/css2?family=Space+Mono:wght@400;700&family=Outfit:wght@300;400;500;600&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 </head>
 <body>
-    <div class="d-flex" id="wrapper">
-        <div class="bg-dark text-white border-end" id="sidebar-wrapper" style="width: 250px; min-height: 100vh;">
-            <div class="sidebar-heading p-4 text-center fw-bold border-bottom">Prediksi Analisis BTC</div>
-            <div class="list-group list-group-flush mt-3">
-                <a href="#dashboard" class="list-group-item list-group-item-action bg-dark text-white" id="link-dashboard">🏠 Dashboard</a>
-                <a href="#prediksi" class="list-group-item list-group-item-action bg-dark text-white" id="link-prediksi">🔮 Prediksi</a>
-                <a href="#analisis" class="list-group-item list-group-item-action bg-dark text-white" id="link-analisis">📊 Analisis</a>
+    <div class="app" id="wrapper">
+
+        <!-- ===== SIDEBAR ===== -->
+        <div class="sidebar">
+            <div class="sidebar-logo">
+                <div class="brand">BTC · LSTM</div>
+                <div class="brand-sub">Prediksi Analisis</div>
+                <div class="btc-ticker">
+                    <div class="btc-price">${{ harga_aktual }}</div>
+                    <div class="btc-change" id="ticker-change">↑ Live Price</div>
+                </div>
+            </div>
+
+            <nav class="nav">
+                <a href="#dashboard" class="nav-item active" id="link-dashboard">
+                    <span class="nav-icon">⊞</span> Dashboard
+                </a>
+                <a href="#prediksi" class="nav-item" id="link-prediksi">
+                    <span class="nav-icon">◎</span> Prediksi
+                </a>
+                <a href="#analisis" class="nav-item" id="link-analisis">
+                    <span class="nav-icon">≋</span> Analisis
+                </a>
+            </nav>
+
+            <div class="sidebar-footer">
+                <div class="model-badge">
+                    <div class="dot-live"></div>
+                    Model aktif · LSTM
+                </div>
             </div>
         </div>
 
-        <div id="page-content-wrapper" class="w-100 p-4">
-            
-            <div id="container-dashboard" class="content-container">
-                <h3 class="mb-4">🏠 Dashboard Utama</h3>
-                <div class="row g-3 mb-4">
-                    <div class="col-md-4">
-                        <div class="card p-3 bg-primary text-white border-0 shadow-sm">
-                            <small>Proyeksi 24 Jam</small>
-                            <h2 class="fw-bold">${{ prediksi_val }}</h2>
-                        </div>
-                    </div>
-                    <div class="col-md-4">
-                        <div class="card p-3 bg-danger text-white border-0 shadow-sm">
-                            <small>MAPE (Error)</small>
-                            <h2 class="fw-bold">{{ mape }}%</h2>
-                        </div>
-                    </div>
-                    <div class="col-md-4">
-                        <div class="card p-3 bg-success text-white border-0 shadow-sm">
-                            <small>Status Model</small>
-                            <h2 class="fw-bold">Active</h2>
-                        </div>
-                    </div>
+        <!-- ===== MAIN CONTENT ===== -->
+        <div class="main">
+
+            <!-- Topbar -->
+            <div class="topbar">
+                <div>
+                    <div class="page-title" id="page-title">Dashboard Utama</div>
+                    <div class="page-sub" id="page-sub">Ringkasan prediksi & trend BTC</div>
                 </div>
-                <div class="card p-4 shadow-sm border-0">
-                    <h5>Trend Bitcoin Terakhir</h5>
-                    <div class="chart-wrapper">
-                        <canvas id="chartDashboard"></canvas>
-                    </div>
+                <div class="topbar-right">
+                    <span class="tag tag-green">Model Active</span>
+                    <span class="tag tag-orange">LSTM · {{ history_range }}d</span>
                 </div>
             </div>
 
-            <div id="container-prediksi" class="content-container d-none">
-                <h3 class="mb-4">🔮 Prediksi Kustom</h3>
-                <div class="card p-4 border-0 shadow-sm">
-                    <form id="form-prediksi">
-                        <div class="row g-3">
-                            <div class="col-md-6">
-                                <label class="form-label">Tentukan Tanggal & Jam Target</label>
-                                <input type="datetime-local" id="input_datetime" class="form-control">
+            <!-- Scrollable Content Area -->
+            <div class="content">
+
+                <!-- ===== DASHBOARD SECTION ===== -->
+                <div class="section" id="container-dashboard">
+
+                    <!-- Baris metrik utama -->
+                    <div class="metrics-row">
+                        <div class="metric-card blue">
+                            <div class="metric-label">Harga Sekarang</div>
+                            <div class="metric-value blue">${{ harga_aktual }}</div>
+                            <div class="metric-hint">Real-time feed</div>
+                        </div>
+                        <div class="metric-card orange">
+                            <div class="metric-label">MAPE Error</div>
+                            <div class="metric-value orange">{{ mape }}%</div>
+                            <div class="metric-hint">Mean absolute % error</div>
+                        </div>
+                        <div class="metric-card green">
+                            <div class="metric-label">Akurasi Model</div>
+                            <div class="metric-value green">{{ acc }}%</div>
+                            <div class="metric-hint">Backtesting {{ history_range }} hari</div>
+                        </div>
+                    </div>
+
+                    <!-- ── 2 Kartu Prediksi 24 Jam ── -->
+                    <div class="pred-split-row">
+
+                        <!-- Bivariate: BTC + Emas -->
+                        <div class="pred-card pred-card-biv">
+                            <div class="pred-card-header">
+                                <span class="pred-mode-badge badge-biv">Bivariate</span>
+                                <span class="pred-assets">BTC · Emas</span>
                             </div>
-                            <div class="col-md-6 d-flex align-items-end">
-                                <button type="button" class="btn btn-primary w-100 fw-bold" onclick="getCustomPrediction()">Proses Prediksi</button>
+                            <div class="pred-card-label">Proyeksi 24 Jam</div>
+                            <div class="pred-card-val val-biv">${{ prediksi_biv }}</div>
+                            <div class="pred-card-hint">Target: {{ next_day }}</div>
+                            <div class="pred-card-note">Berbasis 2 aset · BTC + Gold (GC=F)</div>
+                        </div>
+
+                        <!-- Multivariate: semua logam -->
+                        <div class="pred-card pred-card-mult">
+                            <div class="pred-card-header">
+                                <span class="pred-mode-badge badge-mult">Multivariate</span>
+                                <span class="pred-assets">BTC · Emas · Perak · Platinum · Palladium · Rhodium</span>
+                            </div>
+                            <div class="pred-card-label">Proyeksi 24 Jam</div>
+                            <div class="pred-card-val val-mult">${{ prediksi_mult }}</div>
+                            <div class="pred-card-hint">Target: {{ next_day }}</div>
+                            <div class="pred-card-note">Berbasis 6 aset · seluruh logam mulia</div>
+                        </div>
+
+                    </div>
+
+                    <!-- Chart Trend -->
+                    <div class="chart-card">
+                        <div class="chart-header">
+                            <div class="chart-title">Trend Bitcoin Terakhir</div>
+                            <div class="chart-pills">
+                                <a href="?history_range=30&interval=30d&target_date={{ target_date }}" class="pill {{ 'active' if interval == '30d' }}">30H</a>
+                                <a href="?history_range=60&interval=60d&target_date={{ target_date }}" class="pill {{ 'active' if interval == '60d' }}">60H</a>
+                                <a href="?history_range=90&interval=90d&target_date={{ target_date }}" class="pill {{ 'active' if interval == '90d' }}">90H</a>
                             </div>
                         </div>
-                    </form>
-                    <div id="hasil-prediksi-kustom" class="mt-4 p-4 bg-light rounded text-center d-none">
-                        <h5 class="text-muted">Hasil Estimasi:</h5>
-                        <h1 class="fw-bold text-primary" id="val_prediksi_kustom">$0.00</h1>
+                        <div class="chart-wrapper">
+                            <canvas id="chartDashboard" role="img" aria-label="Line chart harga BTC {{ history_range }} hari terakhir">Harga BTC dalam {{ history_range }} hari terakhir.</canvas>
+                        </div>
+                        <div class="chart-legend">
+                            <span class="legend-item"><span class="legend-dot" style="background:#f7931a"></span>Harga BTC (USD)</span>
+                        </div>
                     </div>
                 </div>
-            </div>
 
-            <div id="container-analisis" class="content-container d-none">
-                <h3 class="mb-4">📊 Analisis Ketepatan</h3>
-                <div class="card p-4 border-0 shadow-sm mb-4">
-                    <form action="/" method="GET" class="row g-3 align-items-end">
-                        <div class="col-md-4">
-                            <label class="form-label">Tanggal Akhir Analisis</label>
-                            <input type="date" name="target_date" class="form-control" value="{{ target_date }}">
+                <!-- ===== PREDIKSI SECTION ===== -->
+                <div class="section d-none" id="container-prediksi">
+                    <div class="metrics-row">
+                        <div class="metric-card blue">
+                            <div class="metric-label">Harga Aktual</div>
+                            <div class="metric-value blue">${{ harga_aktual }}</div>
+                            <div class="metric-hint">Real-time feed</div>
                         </div>
-                        <div class="col-md-4">
-                            <label class="form-label">Range Hari Kebelakang</label>
-                            <select name="history_range" class="form-select">
-                                <option value="30" {{ 'selected' if history_range == 30 }}>30 Hari</option>
-                                <option value="60" {{ 'selected' if history_range == 60 }}>60 Hari</option>
-                                <option value="90" {{ 'selected' if history_range == 90 }}>90 Hari</option>
-                                <option value="120" {{ 'selected' if history_range == 120 }}>120 Hari</option>
-                            </select>
+                        <div class="metric-card orange">
+                            <div class="metric-label">Prediksi Bivariate</div>
+                            <div class="metric-value orange">${{ prediksi_biv }}</div>
+                            <div class="metric-hint">BTC + Emas · LSTM</div>
                         </div>
-                        <div class="col-md-4">
-                            <button type="submit" class="btn btn-dark w-100">Jalankan Backtesting</button>
+                        <div class="metric-card green">
+                            <div class="metric-label">Prediksi Multivariate</div>
+                            <div class="metric-value green">${{ prediksi_mult }}</div>
+                            <div class="metric-hint">6 Aset · LSTM</div>
                         </div>
-                    </form>
-                </div>
-                <div class="row g-3 mb-4">
-                    <div class="col-md-4"><div class="card p-3 shadow-sm border-0 text-center">MAE: <b>{{ mae }}</b></div></div>
-                    <div class="col-md-4"><div class="card p-3 shadow-sm border-0 text-center">RMSE: <b>{{ rmse }}</b></div></div>
-                    <div class="col-md-4"><div class="card p-3 shadow-sm border-0 bg-success text-white text-center">Akurasi: <b>{{ acc }}%</b></div></div>
-                </div>
-                <div class="card p-4 border-0 shadow-sm">
-                    <h5>Visualisasi Analisis</h5>
-                    <div class="chart-wrapper">
-                        <canvas id="chartAnalisis"></canvas>
+                    </div>
+
+                    <!-- Form Prediksi Kustom -->
+                    <div class="chart-card">
+                        <div class="chart-title" style="margin-bottom:14px">Prediksi Kustom (Masa Depan)</div>
+
+                        <!-- Pilih Mode -->
+                        <div class="mode-toggle-row">
+                            <span class="mode-label">Mode:</span>
+                            <button class="mode-btn active" id="btn-mode-biv" onclick="setMode('bivariate')">
+                                Bivariate <span class="mode-sub">BTC + Emas</span>
+                            </button>
+                            <button class="mode-btn" id="btn-mode-mult" onclick="setMode('multivariate')">
+                                Multivariate <span class="mode-sub">6 Aset Logam</span>
+                            </button>
+                        </div>
+
+                        <div class="form-row" style="margin-top:12px">
+                            <input type="datetime-local" id="input_datetime" class="inp"
+                                   placeholder="Pilih tanggal & jam">
+                            <button class="btn-predict" onclick="getCustomPrediction()">Proses Prediksi</button>
+                        </div>
+                        <div class="pred-future-hint">⚠ Hanya untuk waktu di masa depan dari sekarang</div>
+
+                        <div id="hasil-prediksi-kustom" class="result-box d-none">
+                            <div class="result-label" id="result-mode-label">Estimasi Harga LSTM · Bivariate</div>
+                            <div class="result-val" id="val_prediksi_kustom">$0.00</div>
+                            <div class="result-note" id="result-target-note">–</div>
+                        </div>
+
+                        <div id="result-error" class="result-error d-none"></div>
+                    </div>
+
+                    <!-- Chart Prediksi vs Aktual -->
+                    <div class="chart-card">
+                        <div class="chart-header">
+                            <div class="chart-title">Prediksi vs Aktual</div>
+                        </div>
+                        <div class="chart-wrapper">
+                            <canvas id="chartPrediksi" role="img" aria-label="Perbandingan prediksi LSTM vs harga aktual BTC">Prediksi LSTM vs harga aktual BTC.</canvas>
+                        </div>
+                        <div class="chart-legend">
+                            <span class="legend-item"><span class="legend-line" style="background:#94a3b8"></span>Aktual</span>
+                            <span class="legend-item"><span class="legend-line dashed" style="background:#22c55e"></span>Prediksi LSTM</span>
+                        </div>
                     </div>
                 </div>
-            </div>
 
-        </div>
-    </div>
+                <!-- ===== ANALISIS SECTION ===== -->
+                <div class="section d-none" id="container-analisis">
+
+                    <!-- Baris atas: form + metrik -->
+                    <div class="bottom-row">
+                        <div class="mini-card">
+                            <div class="mini-title">Parameter Backtesting</div>
+                            <form action="/" method="GET" class="param-form">
+                                <div class="form-group">
+                                    <label class="form-label-sm">Tanggal Akhir (hanya lampau)</label>
+                                    <input type="date" name="target_date" class="inp"
+                                           value="{{ target_date }}"
+                                           max="{{ target_date }}">
+                                </div>
+                                <div class="form-group">
+                                    <label class="form-label-sm">Range / Interval</label>
+                                    <!-- Interval waktu -->
+                                    <div class="interval-group-label">Intraday</div>
+                                    <div class="interval-pills-form">
+                                        <label class="ipill {{ 'ipill-active' if interval == '5m' }}">
+                                            <input type="radio" name="interval" value="5m"  {{ 'checked' if interval == '5m'  }}> 5m
+                                        </label>
+                                        <label class="ipill {{ 'ipill-active' if interval == '10m' }}">
+                                            <input type="radio" name="interval" value="10m" {{ 'checked' if interval == '10m' }}> 10m
+                                        </label>
+                                        <label class="ipill {{ 'ipill-active' if interval == '15m' }}">
+                                            <input type="radio" name="interval" value="15m" {{ 'checked' if interval == '15m' }}> 15m
+                                        </label>
+                                        <label class="ipill {{ 'ipill-active' if interval == '30m' }}">
+                                            <input type="radio" name="interval" value="30m" {{ 'checked' if interval == '30m' }}> 30m
+                                        </label>
+                                        <label class="ipill {{ 'ipill-active' if interval == '1h' }}">
+                                            <input type="radio" name="interval" value="1h"  {{ 'checked' if interval == '1h'  }}> 1J
+                                        </label>
+                                    </div>
+                                    <div class="interval-group-label" style="margin-top:8px">Harian</div>
+                                    <div class="interval-pills-form">
+                                        <label class="ipill {{ 'ipill-active' if interval == '30d' }}">
+                                            <input type="radio" name="interval" value="30d" {{ 'checked' if interval == '30d' }}> 30H
+                                        </label>
+                                        <label class="ipill {{ 'ipill-active' if interval == '60d' }}">
+                                            <input type="radio" name="interval" value="60d" {{ 'checked' if interval == '60d' }}> 60H
+                                        </label>
+                                        <label class="ipill {{ 'ipill-active' if interval == '90d' }}">
+                                            <input type="radio" name="interval" value="90d" {{ 'checked' if interval == '90d' }}> 90H
+                                        </label>
+                                    </div>
+                                    <!-- history_range masih dikirim sebagai hidden agar kompatibel -->
+                                    <input type="hidden" name="history_range" value="{{ history_range }}">
+                                </div>
+                                <input type="hidden" name="section" value="analisis">
+                                <button type="submit" class="btn-predict" style="width:100%;margin-top:4px">Jalankan Backtesting</button>
+                            </form>
+                        </div>
+
+                        <div class="mini-card">
+                            <div class="mini-title">Metrik Evaluasi</div>
+                            <div class="metrics-list">
+                                <div class="metric-row">
+                                    <span class="metric-key">MAE</span>
+                                    <span class="metric-num" style="color:#60a5fa">{{ mae }}</span>
+                                </div>
+                                <div class="metric-row">
+                                    <span class="metric-key">RMSE</span>
+                                    <span class="metric-num" style="color:#a78bfa">{{ rmse }}</span>
+                                </div>
+                                <div class="metric-row">
+                                    <span class="metric-key">MAPE</span>
+                                    <span class="metric-num" style="color:#f7931a">{{ mape }}%</span>
+                                </div>
+                                <div class="metric-row">
+                                    <span class="metric-key">Akurasi</span>
+                                    <span class="metric-num" style="color:#22c55e">{{ acc }}%</span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Chart aktual vs prediksi -->
+                    <div class="chart-card">
+                        <div class="chart-header">
+                            <div>
+                                <div class="chart-title">Aktual vs Prediksi LSTM</div>
+                                <div class="chart-subtitle">Interval: {{ interval }} · s/d {{ target_date }}</div>
+                            </div>
+                        </div>
+                        <div class="chart-wrapper" style="height:220px">
+                            <canvas id="chartAnalisis" role="img" aria-label="Grafik harga aktual vs prediksi LSTM">Harga aktual vs prediksi LSTM BTC.</canvas>
+                        </div>
+                        <div class="chart-legend">
+                            <span class="legend-item"><span class="legend-line" style="background:#94a3b8"></span>Aktual</span>
+                            <span class="legend-item"><span class="legend-line dashed" style="background:#22c55e"></span>Prediksi LSTM</span>
+                        </div>
+                    </div>
+
+                    <!-- Tabel perbandingan -->
+                    <div class="chart-card">
+                        <div class="chart-header">
+                            <div class="chart-title">Tabel Perbandingan</div>
+                            <div class="tag tag-orange" style="font-size:9px">{{ hist_dates | length }} data · {{ interval }}</div>
+                        </div>
+                        <div class="table-scroll">
+                            <table class="compare-table">
+                                <thead>
+                                    <tr>
+                                        <th>Waktu</th>
+                                        <th class="text-right">Aktual (USD)</th>
+                                        <th class="text-right">Prediksi (USD)</th>
+                                        <th class="text-right">Selisih</th>
+                                        <th class="text-right">Error %</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    {% for i in range(hist_dates | length) %}
+                                    {% set selisih = hist_actuals[i] - hist_preds[i] %}
+                                    {% set selisih_abs = selisih | abs %}
+                                    {% set error_pct = ((hist_actuals[i] - hist_preds[i]) / hist_actuals[i] * 100) | abs %}
+                                    <tr>
+                                        <td class="date-cell">{{ hist_dates[i] }}</td>
+                                        <td class="text-right mono">${{ "{:,.2f}".format(hist_actuals[i]) }}</td>
+                                        <td class="text-right mono pred-cell">${{ "{:,.2f}".format(hist_preds[i]) }}</td>
+                                        <td class="text-right mono {% if selisih >= 0 %}up{% else %}down{% endif %}">
+                                            {% if selisih >= 0 %}+{% else %}-{% endif %}${{ "{:,.2f}".format(selisih_abs) }}
+                                        </td>
+                                        <td class="text-right mono {% if error_pct < 3 %}up{% elif error_pct < 6 %}warn{% else %}down{% endif %}">
+                                            {{ "{:.2f}".format(error_pct) }}%
+                                        </td>
+                                    </tr>
+                                    {% endfor %}
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+
+                </div><!-- end analisis -->
+
+            </div><!-- end .content -->
+        </div><!-- end .main -->
+    </div><!-- end .app -->
 
     <script src="{{ url_for('static', filename='js/chart_logic.js') }}"></script>
     <script>
-        // 1. FUNGSI NAVIGASI (Sangat Penting)
-        function handleNavigation() {
-            // Ambil ID dari URL Hash (contoh: #analisis), default ke 'dashboard'
-            let hash = window.location.hash.substring(1) || 'dashboard';
-            
-            // Sembunyikan semua container dulu
-            document.querySelectorAll('.content-container').forEach(container => {
-                container.classList.add('d-none');
-            });
-            
-            // Tampilkan container yang sesuai dengan Hash
-            const targetContainer = document.getElementById('container-' + hash);
-            if (targetContainer) {
-                targetContainer.classList.remove('d-none');
-            }
-            
-            // Update tampilan menu Aktif di Sidebar
-            document.querySelectorAll('.list-group-item').forEach(link => {
-                link.classList.remove('active');
-            });
-            const activeLink = document.getElementById('link-' + hash);
-            if (activeLink) {
-                activeLink.classList.add('active');
-            }
-        }
-    
-        // 2. JALANKAN NAVIGASI SAAT REFRESH & PINDAH MENU
-        window.addEventListener('load', handleNavigation);
-        window.addEventListener('hashchange', handleNavigation);
-    
-        // 3. RENDER GRAFIK (Panggil fungsi dari chart_logic.js)
-        // Pastikan data dikirim dari Flask (tojson)
-        renderDashboardChart({{ hist_dates | tojson }}, {{ hist_actuals | tojson }});
-        renderAnalisisChart({{ hist_dates | tojson }}, {{ hist_actuals | tojson }}, {{ hist_preds | tojson }});
-    
-        // 4. FUNGSI PREDIKSI KUSTOM
-        function getCustomPrediction() {
-            const resultBox = document.getElementById('hasil-prediksi-kustom');
-            const valBox = document.getElementById('val_prediksi_kustom');
-            resultBox.classList.remove('d-none');
-            valBox.innerText = "...Processing...";
-            
-            setTimeout(() => {
-                valBox.innerText = "${{ prediksi_val }}"; 
-            }, 1000);
-        }
+        const HIST_DATES    = {{ hist_dates   | tojson }};
+        const HIST_ACTUALS  = {{ hist_actuals | tojson }};
+        const HIST_PREDS    = {{ hist_preds   | tojson }};
+        const PREDIKSI_BIV  = "${{ prediksi_biv }}";
+        const PREDIKSI_MULT = "${{ prediksi_mult }}";
+
+        initApp(HIST_DATES, HIST_ACTUALS, HIST_PREDS, PREDIKSI_BIV, PREDIKSI_MULT);
     </script>
 </body>
 </html>
