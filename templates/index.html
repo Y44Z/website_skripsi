@@ -65,20 +65,25 @@
                 <div class="section" id="container-dashboard">
 
                     <!-- Baris metrik utama -->
-                    <div class="metrics-row">
+                    <div class="metrics-row metrics-row-4">
                         <div class="metric-card blue">
                             <div class="metric-label">Harga Sekarang</div>
                             <div class="metric-value blue">${{ harga_aktual }}</div>
                             <div class="metric-hint">Real-time feed</div>
                         </div>
                         <div class="metric-card orange">
-                            <div class="metric-label">MAPE Error</div>
-                            <div class="metric-value orange">{{ mape }}%</div>
-                            <div class="metric-hint">Mean absolute % error</div>
+                            <div class="metric-label">MAPE · Bivariate</div>
+                            <div class="metric-value orange">{{ mape_biv }}%</div>
+                            <div class="metric-hint">BTC + Emas</div>
+                        </div>
+                        <div class="metric-card purple">
+                            <div class="metric-label">MAPE · Multivariate</div>
+                            <div class="metric-value purple">{{ mape_mult }}%</div>
+                            <div class="metric-hint">6 Aset Logam</div>
                         </div>
                         <div class="metric-card green">
                             <div class="metric-label">Akurasi Model</div>
-                            <div class="metric-value green">{{ acc }}%</div>
+                            <div class="metric-value green">{{ acc_biv }}%</div>
                             <div class="metric-hint">Backtesting {{ history_range }} hari</div>
                         </div>
                     </div>
@@ -206,10 +211,10 @@
                             <div class="mini-title">Parameter Backtesting</div>
                             <form action="/" method="GET" class="param-form">
                                 <div class="form-group">
-                                    <label class="form-label-sm">Tanggal Akhir (hanya lampau)</label>
+                                    <label class="form-label-sm">Tanggal Akhir (tidak bisa melebihi hari ini)</label>
                                     <input type="date" name="target_date" class="inp"
                                            value="{{ target_date }}"
-                                           max="{{ target_date }}">
+                                           max="{{ today_str }}">
                                 </div>
                                 <div class="form-group">
                                     <label class="form-label-sm">Range / Interval</label>
@@ -264,12 +269,20 @@
                                     <span class="metric-num" style="color:#a78bfa">{{ rmse }}</span>
                                 </div>
                                 <div class="metric-row">
-                                    <span class="metric-key">MAPE</span>
-                                    <span class="metric-num" style="color:#f7931a">{{ mape }}%</span>
+                                    <span class="metric-key">MAPE · Bivariate</span>
+                                    <span class="metric-num" style="color:#f7931a">{{ mape_biv }}%</span>
                                 </div>
                                 <div class="metric-row">
-                                    <span class="metric-key">Akurasi</span>
-                                    <span class="metric-num" style="color:#22c55e">{{ acc }}%</span>
+                                    <span class="metric-key">MAPE · Multivariate</span>
+                                    <span class="metric-num" style="color:#a78bfa">{{ mape_mult }}%</span>
+                                </div>
+                                <div class="metric-row">
+                                    <span class="metric-key">Akurasi Biv.</span>
+                                    <span class="metric-num" style="color:#22c55e">{{ acc_biv }}%</span>
+                                </div>
+                                <div class="metric-row">
+                                    <span class="metric-key">Akurasi Mult.</span>
+                                    <span class="metric-num" style="color:#22c55e">{{ acc_mult }}%</span>
                                 </div>
                             </div>
                         </div>

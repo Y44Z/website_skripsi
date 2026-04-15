@@ -266,6 +266,10 @@ body {
     gap: 10px;
 }
 
+.metrics-row-4 {
+    grid-template-columns: repeat(4, 1fr);
+}
+
 .metric-card {
     padding: 14px 16px;
     border-radius: var(--radius-md);
@@ -285,6 +289,7 @@ body {
 .metric-card.blue::before   { background: linear-gradient(90deg, var(--blue), transparent); }
 .metric-card.orange::before { background: linear-gradient(90deg, var(--orange), transparent); }
 .metric-card.green::before  { background: linear-gradient(90deg, var(--green), transparent); }
+.metric-card.purple::before { background: linear-gradient(90deg, var(--purple), transparent); }
 
 .metric-label {
     font-size: 10px;
@@ -304,6 +309,7 @@ body {
 .metric-value.blue   { color: var(--blue); }
 .metric-value.orange { color: var(--orange); }
 .metric-value.green  { color: var(--green); }
+.metric-value.purple { color: var(--purple); }
 
 .metric-hint {
     font-size: 10px;
@@ -849,7 +855,8 @@ body {
     .nav { flex-direction: row; padding: 0; }
     .nav-item { padding: 6px 10px; font-size: 12px; }
 
-    .metrics-row   { grid-template-columns: 1fr 1fr; }
+    .metrics-row,
+    .metrics-row-4 { grid-template-columns: 1fr 1fr; }
     .pred-split-row{ grid-template-columns: 1fr; }
     .bottom-row    { grid-template-columns: 1fr; }
 

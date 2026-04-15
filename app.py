@@ -143,7 +143,8 @@ def index():
     next_day = (datetime.now() + timedelta(days=1)).strftime('%Y-%m-%d %H:%M')
 
     # ── data chart & analisis berdasarkan interval ──
-    hist_dates, hist_actuals, hist_preds = [], [], []
+    hist_dates, hist_actuals = [], []
+    hist_preds_biv, hist_preds_mult = [], []
 
     if interval_key in ('30d', '60d', '90d'):
         # mode harian — pakai history_range
@@ -153,13 +154,15 @@ def index():
         )
         for i in range(history_range, 0, -1):
             if len(data_daily) > (i + 30):
-                window      = data_daily.iloc[-(i + 30):-i]
+                window       = data_daily.iloc[-(i + 30):-i]
                 actual_price = float(data_daily['BTC-USD'].iloc[-i])
-                p = predict_one(window[TICKERS], mode='bivariate')
-                if p is None:
+                p_biv  = predict_one(window[TICKERS], mode='bivariate')
+                p_mult = predict_one(window[TICKERS], mode='multivariate')
+                if p_biv is None or p_mult is None:
                     continue
                 hist_actuals.append(actual_price)
-                hist_preds.append(p)
+                hist_preds_biv.append(p_biv)
+                hist_preds_mult.append(p_mult)
                 hist_dates.append(data_daily.index[-i].strftime('%d/%m'))
 
     else:
@@ -174,32 +177,45 @@ def index():
             if len(intra_df) > (i + 30):
                 window       = intra_df.iloc[-(i + 30):-i]
                 actual_price = float(intra_df['BTC-USD'].iloc[-i])
-                p = predict_one(window[TICKERS], mode='bivariate')
-                if p is None:
+                p_biv  = predict_one(window[TICKERS], mode='bivariate')
+                p_mult = predict_one(window[TICKERS], mode='multivariate')
+                if p_biv is None or p_mult is None:
                     continue
                 hist_actuals.append(actual_price)
-                hist_preds.append(p)
+                hist_preds_biv.append(p_biv)
+                hist_preds_mult.append(p_mult)
                 ts = intra_df.index[-i]
                 if interval_key in ('5m', '10m', '15m', '30m'):
                     hist_dates.append(ts.strftime('%H:%M'))
                 else:
                     hist_dates.append(ts.strftime('%d/%m %H:%M'))
 
-    mae, rmse, mape, acc = calculate_metrics(hist_actuals, hist_preds)
+    # Gunakan bivariate sebagai hist_preds utama untuk chart & tabel
+    hist_preds = hist_preds_biv
+
+    mae_biv,  rmse_biv,  mape_biv,  acc_biv  = calculate_metrics(hist_actuals, hist_preds_biv)
+    mae_mult, rmse_mult, mape_mult, acc_mult  = calculate_metrics(hist_actuals, hist_preds_mult)
+
+    # Untuk tabel analisis & metrik ringkasan, pakai bivariate sebagai default
+    mae, rmse, mape, acc = mae_biv, rmse_biv, mape_biv, acc_biv
 
     return render_template(
         'index.html',
-        target_date    = target_date_str,
-        history_range  = history_range,
-        interval       = interval_key,
-        harga_aktual   = f"{harga_aktual:,.2f}",
-        prediksi_biv   = f"{prediksi_biv:,.2f}",
-        prediksi_mult  = f"{prediksi_mult:,.2f}",
-        next_day       = next_day,
+        today_str     = today_str,
+        target_date   = target_date_str,
+        history_range = history_range,
+        interval      = interval_key,
+        harga_aktual  = f"{harga_aktual:,.2f}",
+        prediksi_biv  = f"{prediksi_biv:,.2f}",
+        prediksi_mult = f"{prediksi_mult:,.2f}",
+        next_day      = next_day,
+        mape_biv=mape_biv, acc_biv=acc_biv,
+        mape_mult=mape_mult, acc_mult=acc_mult,
         mae=mae, rmse=rmse, mape=mape, acc=acc,
-        hist_dates   = hist_dates,
-        hist_actuals = hist_actuals,
-        hist_preds   = hist_preds,
+        hist_dates=hist_dates,
+        hist_actuals=hist_actuals,
+        hist_preds=hist_preds,
+        hist_preds_mult=hist_preds_mult,
     )
 
 
