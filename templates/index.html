@@ -257,38 +257,63 @@
                             </form>
                         </div>
 
-                        <div class="mini-card">
-                            <div class="mini-title">Metrik Evaluasi</div>
-                            <div class="metrics-list">
-                                <div class="metric-row">
-                                    <span class="metric-key">MAE</span>
-                                    <span class="metric-num" style="color:#60a5fa">{{ mae }}</span>
+                        <div class="mini-card metrics-split-card">
+                            <div class="mini-title">Metrik Evaluasi Backtesting</div>
+                            <div class="metrics-split">
+
+                                <!-- Bivariate -->
+                                <div class="metrics-col">
+                                    <div class="metrics-col-header badge-biv-sm">Bivariate</div>
+                                    <div class="metrics-list">
+                                        <div class="metric-row">
+                                            <span class="metric-key">MAE</span>
+                                            <span class="metric-num" style="color:#60a5fa">{{ mae_biv }}</span>
+                                        </div>
+                                        <div class="metric-row">
+                                            <span class="metric-key">RMSE</span>
+                                            <span class="metric-num" style="color:#a78bfa">{{ rmse_biv }}</span>
+                                        </div>
+                                        <div class="metric-row">
+                                            <span class="metric-key">MAPE</span>
+                                            <span class="metric-num" style="color:#f7931a">{{ mape_biv }}%</span>
+                                        </div>
+                                        <div class="metric-row">
+                                            <span class="metric-key">Akurasi</span>
+                                            <span class="metric-num" style="color:#22c55e">{{ acc_biv }}%</span>
+                                        </div>
+                                    </div>
                                 </div>
-                                <div class="metric-row">
-                                    <span class="metric-key">RMSE</span>
-                                    <span class="metric-num" style="color:#a78bfa">{{ rmse }}</span>
+
+                                <div class="metrics-divider"></div>
+
+                                <!-- Multivariate -->
+                                <div class="metrics-col">
+                                    <div class="metrics-col-header badge-mult-sm">Multivariate</div>
+                                    <div class="metrics-list">
+                                        <div class="metric-row">
+                                            <span class="metric-key">MAE</span>
+                                            <span class="metric-num" style="color:#60a5fa">{{ mae_mult }}</span>
+                                        </div>
+                                        <div class="metric-row">
+                                            <span class="metric-key">RMSE</span>
+                                            <span class="metric-num" style="color:#a78bfa">{{ rmse_mult }}</span>
+                                        </div>
+                                        <div class="metric-row">
+                                            <span class="metric-key">MAPE</span>
+                                            <span class="metric-num" style="color:#a78bfa">{{ mape_mult }}%</span>
+                                        </div>
+                                        <div class="metric-row">
+                                            <span class="metric-key">Akurasi</span>
+                                            <span class="metric-num" style="color:#22c55e">{{ acc_mult }}%</span>
+                                        </div>
+                                    </div>
                                 </div>
-                                <div class="metric-row">
-                                    <span class="metric-key">MAPE · Bivariate</span>
-                                    <span class="metric-num" style="color:#f7931a">{{ mape_biv }}%</span>
-                                </div>
-                                <div class="metric-row">
-                                    <span class="metric-key">MAPE · Multivariate</span>
-                                    <span class="metric-num" style="color:#a78bfa">{{ mape_mult }}%</span>
-                                </div>
-                                <div class="metric-row">
-                                    <span class="metric-key">Akurasi Biv.</span>
-                                    <span class="metric-num" style="color:#22c55e">{{ acc_biv }}%</span>
-                                </div>
-                                <div class="metric-row">
-                                    <span class="metric-key">Akurasi Mult.</span>
-                                    <span class="metric-num" style="color:#22c55e">{{ acc_mult }}%</span>
-                                </div>
+
                             </div>
                         </div>
                     </div>
 
-                    <!-- Chart aktual vs prediksi -->
+                    <!-- Chart aktual vs prediksi — 3 garis + toggle -->
                     <div class="chart-card">
                         <div class="chart-header">
                             <div>
@@ -296,46 +321,59 @@
                                 <div class="chart-subtitle">Interval: {{ interval }} · s/d {{ target_date }}</div>
                             </div>
                         </div>
+                        <!-- Toggle garis -->
+                        <div class="chart-toggle-row">
+                            <button class="ctoggle ctoggle-aktual active" id="tog-aktual" onclick="toggleDataset('chartAnalisis',0)">
+                                <span class="ctoggle-dot" style="background:#94a3b8"></span> Aktual
+                            </button>
+                            <button class="ctoggle ctoggle-biv active" id="tog-biv" onclick="toggleDataset('chartAnalisis',1)">
+                                <span class="ctoggle-dot" style="background:#f7931a"></span> Bivariate
+                            </button>
+                            <button class="ctoggle ctoggle-mult active" id="tog-mult" onclick="toggleDataset('chartAnalisis',2)">
+                                <span class="ctoggle-dot" style="background:#a78bfa"></span> Multivariate
+                            </button>
+                        </div>
                         <div class="chart-wrapper" style="height:220px">
                             <canvas id="chartAnalisis" role="img" aria-label="Grafik harga aktual vs prediksi LSTM">Harga aktual vs prediksi LSTM BTC.</canvas>
-                        </div>
-                        <div class="chart-legend">
-                            <span class="legend-item"><span class="legend-line" style="background:#94a3b8"></span>Aktual</span>
-                            <span class="legend-item"><span class="legend-line dashed" style="background:#22c55e"></span>Prediksi LSTM</span>
                         </div>
                     </div>
 
                     <!-- Tabel perbandingan -->
                     <div class="chart-card">
                         <div class="chart-header">
-                            <div class="chart-title">Tabel Perbandingan</div>
+                            <div class="chart-title">Tabel Perbandingan Harian</div>
                             <div class="tag tag-orange" style="font-size:9px">{{ hist_dates | length }} data · {{ interval }}</div>
                         </div>
                         <div class="table-scroll">
                             <table class="compare-table">
                                 <thead>
                                     <tr>
-                                        <th>Waktu</th>
-                                        <th class="text-right">Aktual (USD)</th>
-                                        <th class="text-right">Prediksi (USD)</th>
-                                        <th class="text-right">Selisih</th>
-                                        <th class="text-right">Error %</th>
+                                        <th rowspan="2">Waktu</th>
+                                        <th rowspan="2" class="text-right">Aktual (USD)</th>
+                                        <th colspan="2" class="text-center th-biv">Bivariate</th>
+                                        <th colspan="2" class="text-center th-mult">Multivariate</th>
+                                    </tr>
+                                    <tr>
+                                        <th class="text-right th-biv">Prediksi</th>
+                                        <th class="text-right th-biv">Error %</th>
+                                        <th class="text-right th-mult">Prediksi</th>
+                                        <th class="text-right th-mult">Error %</th>
                                     </tr>
                                 </thead>
                                 <tbody>
                                     {% for i in range(hist_dates | length) %}
-                                    {% set selisih = hist_actuals[i] - hist_preds[i] %}
-                                    {% set selisih_abs = selisih | abs %}
-                                    {% set error_pct = ((hist_actuals[i] - hist_preds[i]) / hist_actuals[i] * 100) | abs %}
+                                    {% set ep_biv  = ((hist_actuals[i] - hist_preds[i])       / hist_actuals[i] * 100) | abs %}
+                                    {% set ep_mult = ((hist_actuals[i] - hist_preds_mult[i])  / hist_actuals[i] * 100) | abs %}
                                     <tr>
                                         <td class="date-cell">{{ hist_dates[i] }}</td>
                                         <td class="text-right mono">${{ "{:,.2f}".format(hist_actuals[i]) }}</td>
                                         <td class="text-right mono pred-cell">${{ "{:,.2f}".format(hist_preds[i]) }}</td>
-                                        <td class="text-right mono {% if selisih >= 0 %}up{% else %}down{% endif %}">
-                                            {% if selisih >= 0 %}+{% else %}-{% endif %}${{ "{:,.2f}".format(selisih_abs) }}
+                                        <td class="text-right mono {% if ep_biv < 3 %}up{% elif ep_biv < 6 %}warn{% else %}down{% endif %}">
+                                            {{ "{:.2f}".format(ep_biv) }}%
                                         </td>
-                                        <td class="text-right mono {% if error_pct < 3 %}up{% elif error_pct < 6 %}warn{% else %}down{% endif %}">
-                                            {{ "{:.2f}".format(error_pct) }}%
+                                        <td class="text-right mono pred-mult-cell">${{ "{:,.2f}".format(hist_preds_mult[i]) }}</td>
+                                        <td class="text-right mono {% if ep_mult < 3 %}up{% elif ep_mult < 6 %}warn{% else %}down{% endif %}">
+                                            {{ "{:.2f}".format(ep_mult) }}%
                                         </td>
                                     </tr>
                                     {% endfor %}
@@ -352,13 +390,14 @@
 
     <script src="{{ url_for('static', filename='js/chart_logic.js') }}"></script>
     <script>
-        const HIST_DATES    = {{ hist_dates   | tojson }};
-        const HIST_ACTUALS  = {{ hist_actuals | tojson }};
-        const HIST_PREDS    = {{ hist_preds   | tojson }};
-        const PREDIKSI_BIV  = "${{ prediksi_biv }}";
-        const PREDIKSI_MULT = "${{ prediksi_mult }}";
+        const HIST_DATES       = {{ hist_dates       | tojson }};
+        const HIST_ACTUALS     = {{ hist_actuals     | tojson }};
+        const HIST_PREDS       = {{ hist_preds       | tojson }};
+        const HIST_PREDS_MULT  = {{ hist_preds_mult  | tojson }};
+        const PREDIKSI_BIV     = "${{ prediksi_biv }}";
+        const PREDIKSI_MULT    = "${{ prediksi_mult }}";
 
-        initApp(HIST_DATES, HIST_ACTUALS, HIST_PREDS, PREDIKSI_BIV, PREDIKSI_MULT);
+        initApp(HIST_DATES, HIST_ACTUALS, HIST_PREDS, HIST_PREDS_MULT, PREDIKSI_BIV, PREDIKSI_MULT);
     </script>
 </body>
 </html>

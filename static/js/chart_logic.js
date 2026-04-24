@@ -100,21 +100,41 @@
    }
    
    /* ----------------------------------------------------------
-      RENDER ANALISIS CHART (aktual + prediksi)
+      RENDER ANALISIS CHART (aktual + bivariate + multivariate)
       ---------------------------------------------------------- */
-   function renderAnalisisChart(labels, actualData, predData) {
+   
+   // Simpan instance chart agar bisa di-toggle
+   const _chartInstances = {};
+   
+   function renderAnalisisChart(labels, actualData, predBiv, predMult) {
        const canvas = document.getElementById('chartAnalisis');
        if (!canvas) return;
    
-       new Chart(canvas, {
+       // Hancurkan instance lama jika ada
+       if (_chartInstances['chartAnalisis']) {
+           _chartInstances['chartAnalisis'].destroy();
+       }
+   
+       const instance = new Chart(canvas, {
            type: 'line',
            data: {
                labels,
                datasets: [
                    {
-                       label:            'Harga Aktual',
+                       label:            'Aktual',
                        data:             actualData,
                        borderColor:      C.slate,
+                       fill:             false,
+                       tension:          0.4,
+                       pointRadius:      0,
+                       pointHoverRadius: 4,
+                       borderWidth:      1.8,
+                   },
+                   {
+                       label:            'Bivariate',
+                       data:             predBiv,
+                       borderColor:      C.orange,
+                       borderDash:       [5, 4],
                        fill:             false,
                        tension:          0.4,
                        pointRadius:      0,
@@ -122,10 +142,10 @@
                        borderWidth:      1.5,
                    },
                    {
-                       label:            'Prediksi LSTM',
-                       data:             predData,
-                       borderColor:      C.green,
-                       borderDash:       [5, 4],
+                       label:            'Multivariate',
+                       data:             predMult,
+                       borderColor:      C.purple,
+                       borderDash:       [3, 3],
                        fill:             false,
                        tension:          0.4,
                        pointRadius:      0,
@@ -143,6 +163,26 @@
                scales:              defaultScales(),
            },
        });
+   
+       _chartInstances['chartAnalisis'] = instance;
+   }
+   
+   /* ----------------------------------------------------------
+      TOGGLE DATASET — on/off per garis
+      id: canvas id, datasetIndex: 0=aktual,1=biv,2=mult
+      ---------------------------------------------------------- */
+   function toggleDataset(chartId, datasetIndex) {
+       const chart = _chartInstances[chartId];
+       if (!chart) return;
+   
+       const meta = chart.getDatasetMeta(datasetIndex);
+       meta.hidden = !meta.hidden;
+       chart.update();
+   
+       // Update tombol visual
+       const btnIds = ['tog-aktual', 'tog-biv', 'tog-mult'];
+       const btn = document.getElementById(btnIds[datasetIndex]);
+       if (btn) btn.classList.toggle('active', !meta.hidden);
    }
    
    /* ----------------------------------------------------------
@@ -363,7 +403,7 @@
    /* ----------------------------------------------------------
       INIT — dipanggil dari index.html setelah data tersedia
       ---------------------------------------------------------- */
-   function initApp(histDates, histActuals, histPreds, prediksiVal, prediksiMult) {
+   function initApp(histDates, histActuals, histPreds, histPredsMult, prediksiVal, prediksiMult) {
        window._PREDIKSI_BIV  = prediksiVal;
        window._PREDIKSI_MULT = prediksiMult;
    
@@ -377,11 +417,11 @@
                window.location.hash = '#analisis';
                setTimeout(() => {
                    handleNavigation();
-                   renderAllCharts(histDates, histActuals, histPreds);
+                   renderAllCharts(histDates, histActuals, histPreds, histPredsMult);
                }, 50);
            } else {
                handleNavigation();
-               renderAllCharts(histDates, histActuals, histPreds);
+               renderAllCharts(histDates, histActuals, histPreds, histPredsMult);
            }
    
            initDatetimePicker();
@@ -389,8 +429,8 @@
        });
    }
    
-   function renderAllCharts(histDates, histActuals, histPreds) {
+   function renderAllCharts(histDates, histActuals, histPreds, histPredsMult) {
        renderDashboardChart(histDates, histActuals);
-       renderAnalisisChart(histDates, histActuals, histPreds);
+       renderAnalisisChart(histDates, histActuals, histPreds, histPredsMult);
        renderPrediksiChart(histDates, histActuals, histPreds);
    }
